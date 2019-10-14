@@ -1,3 +1,9 @@
+% get eigenface and originalmean from the csv file we save
+eigenface=csvread("eigenface.csv");
+origmean=csvread("original_mean.csv");
+origmean=repmat(origmean,1,1300);
+
+
 % open the folder of test images and form image matrix
 testpath="/home/dmplus/2019_juniorI/CV/assignment/assignment1/dataset/AR/AR_Test_image/";
 
@@ -12,7 +18,7 @@ testimg=dir(testpattern);
 numoftest=length(testimg);
 testmat=zeros(19800,1300);
 
-for i=1:numoftest
+for i=1:1300
     imgname=fullfile(testpath,testimg(i).name);
     img=imread(imgname);
     gray=rgb2gray(img);
@@ -21,97 +27,132 @@ for i=1:numoftest
 end
 
 
+% open the folder of train images and form image matrix
+trainpath="/home/dmplus/2019_juniorI/CV/assignment/assignment1/dataset/AR/AR_Train_image/";
+
+if ~isfolder(trainpath)
+    errorMessage=sprintf('Error: The following folder does not exist:\n%s',trainpath);
+    uiwait(warndlg(errorMessage));
+    return;
+end
+
+trainpattern=fullfile(trainpath,'*.bmp');
+trainimg=dir(trainpattern);
+numoftrain=length(trainimg);
+trainmat=zeros(19800,1300);
+
+for i=1:1300
+    imgname=fullfile(trainpath,trainimg(i).name);
+    img=imread(imgname);
+    gray=rgb2gray(img);
+    gray=im2double(gray);
+    trainmat(:,i)=gray(:); 
+end
+
+errrate=string(3,2);
+
+
 % calculate d=1 image error rate
-d1path="after_reduce_dimension/d1";
+projectimg=trainmat'*eigenface(:,1);
+traindecompress=projectimg*eigenface(:,1)';
+traindecompress=traindecompress'+origmean;
 
-if ~isfolder(d1path)
-    errorMessage=sprintf('Error: The following folder does not exist:\n%s',d1path);
-    uiwait(warndlg(errorMessage));
-    return;
-end
+projectimg=testmat'*eigenface(:,1);
+testdecompress=projectimg*eigenface(:,1)';
+testdecompress=testdecompress'+origmean;
 
-d1pattern=fullfile(d1path,'*.bmp');
-d1img=dir(d1pattern);
-imgpair=strings([100,3]);
+errors=0;
 
-for i=1:100
-    imgname=fullfile(d1path,d1img(i).name);
-    img=imread(imgname);
-    vec=mat2gray(img);
-    vec=im2double(vec(:));
-    ssdvec=zeros(19800,100);
-    for j=1:1300
-       ssdvec(:,j)=(vec-testmat(:,j)).^2; 
+for i=1:1300
+    idx=knnsearch(traindecompress',testdecompress(:,i)');
+    if rem(idx,13)~=0
+        idxgrp=fix(idx/13)+1;
+    else
+        idxgrp=fix(idx/13);
     end
-    ssdans=sum(ssdvec);
-    [errrate,idx]=min(ssdans);
-    imgpair(i,:)=reshape({d1img(i).name,testimg(idx).name,num2str(errrate)},1,3);
-end
-
-imgtable=array2table(imgpair);
-imgtable.Properties.VariableNames={'image_after_PCA','matched_test_image','min_error_rate'};
-writetable(imgtable,'d1_error_rate.csv');
-
-
-% calculate d=5 image error rate 
-d5path="after_reduce_dimension/d5";
-
-if ~isfolder(d5path)
-    errorMessage=sprintf('Error: The following folder does not exist:\n%s',d5path);
-    uiwait(warndlg(errorMessage));
-    return;
-end
-
-d5pattern=fullfile(d5path,'*.bmp');
-d5img=dir(d5pattern);
-imgpair=strings([100,3]);
-
-for i=1:100
-    imgname=fullfile(d5path,d5img(i).name);
-    img=imread(imgname);
-    vec=mat2gray(img);
-    vec=im2double(vec(:));
-    ssdvec=zeros(19800,100);
-    for j=1:1300
-       ssdvec(:,j)=(vec-testmat(:,j)).^2; 
+    if rem(i,13)~=0
+        testgrp=fix(i/13)+1;
+    else
+        testgrp=fix(i/13);
     end
-    ssdans=sum(ssdvec);
-    [errrate,idx]=min(ssdans);
-    imgpair(i,:)=reshape({d5img(i).name,testimg(idx).name,num2str(errrate)},1,3);
-end
-
-imgtable=array2table(imgpair);
-imgtable.Properties.VariableNames={'image_after_PCA','matched_test_image','min_error_rate'};
-writetable(imgtable,'d5_error_rate.csv');
-
-
-% calculate d=9 image error rate 
-d9path="after_reduce_dimension/d9";
-
-if ~isfolder(d9path)
-    errorMessage=sprintf('Error: The following folder does not exist:\n%s',d9path);
-    uiwait(warndlg(errorMessage));
-    return;
-end
-
-d9pattern=fullfile(d9path,'*.bmp');
-d9img=dir(d9pattern);
-imgpair=strings([100,3]);
-
-for i=1:100
-    imgname=fullfile(d9path,d9img(i).name);
-    img=imread(imgname);
-    vec=mat2gray(img);
-    vec=im2double(vec(:));
-    ssdvec=zeros(19800,100);
-    for j=1:1300
-       ssdvec(:,j)=(vec-testmat(:,j)).^2; 
+    if idxgrp~=testgrp
+       errors=errors+1; 
     end
-    ssdans=sum(ssdvec);
-    [errrate,idx]=min(ssdans);
-    imgpair(i,:)=reshape({d9img(i).name,testimg(idx).name,num2str(errrate)},1,3);
 end
 
-imgtable=array2table(imgpair);
-imgtable.Properties.VariableNames={'image_after_PCA','matched_test_image','min_error_rate'};
-writetable(imgtable,'d9_error_rate.csv');
+d1_error_rate=double(errors)/double(1300);
+
+
+errrate(1,:)={"d1",num2str(d1_error_rate)};
+
+
+% calculate d=5 image error rate
+projectimg=trainmat'*eigenface(:,1:5);
+traindecompress=projectimg*eigenface(:,1:5)';
+traindecompress=traindecompress'+origmean;
+
+projectimg=testmat'*eigenface(:,1:5);
+testdecompress=projectimg*eigenface(:,1:5)';
+testdecompress=testdecompress'+origmean;
+
+errors=0;
+
+for i=1:1300
+    idx=knnsearch(traindecompress',testdecompress(:,i)');
+    if rem(idx,13)~=0
+        idxgrp=fix(idx/13)+1;
+    else
+        idxgrp=fix(idx/13);
+    end
+    if rem(i,13)~=0
+        testgrp=fix(i/13)+1;
+    else
+        testgrp=fix(i/13);
+    end
+    if idxgrp~=testgrp
+       errors=errors+1; 
+    end
+end
+
+d5_error_rate=double(errors)/double(1300);
+
+errrate(2,:)={"d5",num2str(d5_error_rate)};
+
+
+% calculate d=9 image error rate
+projectimg=trainmat'*eigenface(:,1:9);
+traindecompress=projectimg*eigenface(:,1:9)';
+traindecompress=traindecompress'+origmean;
+
+projectimg=testmat'*eigenface(:,1:9);
+testdecompress=projectimg*eigenface(:,1:9)';
+testdecompress=testdecompress'+origmean;
+
+errors=0;
+
+for i=1:1300
+    idx=knnsearch(traindecompress',testdecompress(:,i)');
+    if rem(idx,13)~=0
+        idxgrp=fix(idx/13)+1;
+    else
+        idxgrp=fix(idx/13);
+    end
+    if rem(i,13)~=0
+        testgrp=fix(i/13)+1;
+    else
+        testgrp=fix(i/13);
+    end
+    if idxgrp~=testgrp
+       errors=errors+1; 
+    end
+end
+
+d9_error_rate=double(errors)/double(1300);
+
+errrate(3,:)={"d9",num2str(d9_error_rate)};
+
+
+% wrtie error rate to csv file
+errtable=array2table(errrate);
+errtable.Properties.VariableNames={'dimension','error_rate'};
+writetable(errtable,'error_rate.csv');
