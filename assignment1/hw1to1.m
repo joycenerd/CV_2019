@@ -25,8 +25,17 @@ for i=1:numoftrain
 end
 
 
-% find mean face
-meanface=mean(imgmtx,2);
+% read images + 2d -> 1d +  img vector concatenate to image matrix
+imgmtx=[];
+
+for i=1:numoftrain
+    curfname=fullfile(traindir,trainimg(i).name);
+    img=imread(curfname);
+    grayscaleimg=rgb2gray(img);
+    grayscaleimg=im2double(grayscaleimg);
+    imgvec=grayscaleimg(:);
+    imgmtx=[imgmtx,imgvec];
+end
 
 
 % value minus mean face
@@ -38,6 +47,7 @@ covmtx=cov(imgmtx');
 
 
 % find eigenvalues and eigenvector
+% gpucovmtx=gpuArray(covmtx);
 [eigvec,eigvals,eigvec2]=svds(covmtx,9,"largest");
 
 
@@ -52,7 +62,7 @@ end
 
 
 % convert matrix back to grayscale image
-pathname='eigfaces/'
+pathname='eigfaces/';
 
 for i=1:9
     eigface=mat2gray(matrices{i});
@@ -73,18 +83,8 @@ for i=1:9
     eigfacemtx=[eigfacemtx,grayvec];
 end
 
-csvwrite('eigenface.csv',eigfacemtx);
+csvwrite('eigenface.csv',eigvec);
 csvwrite('original_mean.csv',meanface);
-
-
-
-
-
-
-
-
-
-
 
 
 

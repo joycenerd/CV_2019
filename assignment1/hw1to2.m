@@ -1,11 +1,29 @@
-% get eigenface from the csv file we save
+% get eigenface and originalmean from the csv file we save
 eigenface=csvread("eigenface.csv");
 origmean=csvread("original_mean.csv");
+origmean=repmat(origmean,1,100);
 
 
 % get 1 random photo from each person -> total 100 photos
-testdatapath="/home/dmplus/2019_juniorI/CV/assignment/assignment1/dataset/AR/AR_Test_image"
+selectfolderpath="selected_test_images/";
 
+if ~isfolder(selectfolderpath)
+    errorMessage=sprintf('Error: The following folder does not exist:\n%s',selectfolderpath);
+    uiwait(warndlg(errorMessage));
+    return;
+end
+
+selectpattern=fullfile(selectfolderpath,'*.bmp');
+selectimg=dir(selectpattern);
+numofselect=length(selectimg)
+if numofselect~=0
+    for i=1:numofselect
+        fname=fullfile(selectfolderpath,selectimg(i).name);
+        delete(fname);
+    end
+end
+
+testdatapath="/home/dmplus/2019_juniorI/CV/assignment/assignment1/dataset/AR/AR_Test_image"
 if ~isfolder(testdatapath)
     errorMessage=sprintf('Error: The following folder does not exist:\n%s',testdatapath);
     uiwait(warndlg(errorMessage));
@@ -31,26 +49,80 @@ for i=1:100
 end
 
 
-% tpreprocess the selected test images
+% preprocess the selected test images
 % 1. grayscale 2. matrix -> vector 3. 100 vector concatenate to into 1
 % matrix
-selectimgdir="selected_test_images/"
+selectfolderpath="selected_test_images/";
 
-if ~isfolder(selectimgdir)
-    errorMessage=sprintf('Error: The following folder does not exist:\n%s',selectimgdir);
+if ~isfolder(selectfolderpath)
+    errorMessage=sprintf('Error: The following folder does not exist:\n%s',selectfolderpath);
     uiwait(warndlg(errorMessage));
     return;
 end
 
-selectimgpattern=fullfile(selectimgdir,'*.bmp');
-selectimgs=dir(selectimgpattern);
-numofselect=length(selectimgs);
+selectpattern=fullfile(selectfolderpath,'*.bmp');
+selectimg=dir(selectpattern);
+numofselect=length(selectimg);
+
 imgmat=zeros(19800,100);
 
-for i=1:numofselect
-    fname=fullfile(selectimgdir,selectimgs(i).name);
+for i=1:100
+    fname=fullfile(selectfolderpath,selectimg(i).name);
     finfo=imread(fname);
     grayimg=rgb2gray(finfo);
+    grayimg=im2double(grayimg);
     vec=grayimg(:);
     imgmat(:,i)=vec;
+end
+
+
+% compress and decompress the image when d=1,5,9
+reducedimdir="after_reduce_dimension/";
+
+
+% d=1
+d1path=strcat(reducedimdir,"d1/");
+projectimg=imgmat'*eigenface(:,1);
+origimg=projectimg*eigenface(:,1)';
+origimg=origimg'+origmean;
+vec=num2cell(origimg,1);
+
+for i=1:100
+    mat=reshape(vec{i},165,120);
+    gray=mat2gray(mat);
+    %imshow(gray);
+    fname=strcat('person',num2str(i));
+    imwrite(gray,fullfile(d1path,strcat(fname,'.bmp')));
+end
+
+
+% d=5
+d5path=strcat(reducedimdir,"d5/");
+projectimg=imgmat'*eigenface(:,1:5);
+origimg=projectimg*eigenface(:,1:5)';
+origimg=origimg'+origmean;
+vec=num2cell(origimg,1);
+
+for i=1:100
+    mat=reshape(vec{i},165,120);
+    gray=mat2gray(mat);
+    %imshow(gray);
+    fname=strcat('person',num2str(i));
+    imwrite(gray,fullfile(d5path,strcat(fname,'.bmp')));
+end
+
+
+% d=9
+d9path=strcat(reducedimdir,"d9/");
+projectimg=imgmat'*eigenface(:,1:9);
+origimg=projectimg*eigenface(:,1:9)';
+origimg=origimg'+origmean;
+vec=num2cell(origimg,1);
+
+for i=1:100
+    mat=reshape(vec{i},165,120);
+    gray=mat2gray(mat);
+    imshow(gray);
+    fname=strcat('person',num2str(i));
+    imwrite(gray,fullfile(d9path,strcat(fname,'.bmp')));
 end
