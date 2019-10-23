@@ -25,17 +25,8 @@ for i=1:numoftrain
 end
 
 
-% read images + 2d -> 1d +  img vector concatenate to image matrix
-imgmtx=[];
-
-for i=1:numoftrain
-    curfname=fullfile(traindir,trainimg(i).name);
-    img=imread(curfname);
-    grayscaleimg=rgb2gray(img);
-    grayscaleimg=im2double(grayscaleimg);
-    imgvec=grayscaleimg(:);
-    imgmtx=[imgmtx,imgvec];
-end
+% find mean face
+meanface=mean(imgmtx,2);
 
 
 % value minus mean face
@@ -53,7 +44,6 @@ covmtx=cov(imgmtx');
 
 % reshape the vector back to image size
 vectors=num2cell(eigvec,1);
-
 matrices={};
 
 for i=1:9
@@ -67,10 +57,8 @@ pathname='eigfaces/';
 for i=1:9
     eigface=mat2gray(matrices{i});
     imshow(eigface);
-    if(i==1 || i==5 || i==9)
-        fname=strcat('d',num2str(i));
-       imwrite(eigface,fullfile('eigfaces/',strcat(fname,'.bmp'))); 
-    end
+    fname=strcat('d',num2str(i));
+    imwrite(eigface,fullfile('eigfaces/',strcat(fname,'.bmp'))); 
 end
 
 
@@ -85,8 +73,3 @@ end
 
 csvwrite('eigenface.csv',eigvec);
 csvwrite('original_mean.csv',meanface);
-
-
-
-
-

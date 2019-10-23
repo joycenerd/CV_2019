@@ -26,6 +26,8 @@ for i=1:1300
     testmat(:,i)=gray(:);
 end
 
+testmat=testmat-origmean;
+
 
 % open the folder of train images and form image matrix
 trainpath="/home/dmplus/2019_juniorI/CV/assignment/assignment1/dataset/AR/AR_Train_image/";
@@ -49,7 +51,8 @@ for i=1:1300
     trainmat(:,i)=gray(:); 
 end
 
-errrate=string(3,2);
+trainmat=trainmat-origmean;
+errrate=strings(3,2);
 
 
 % calculate d=1 image error rate
@@ -76,13 +79,12 @@ for i=1:1300
         testgrp=fix(i/13);
     end
     if idxgrp~=testgrp
-       errors=errors+1; 
+       errors=errors+1;
+       
     end
 end
 
 d1_error_rate=double(errors)/double(1300);
-
-
 errrate(1,:)={"d1",num2str(d1_error_rate)};
 
 
@@ -115,7 +117,6 @@ for i=1:1300
 end
 
 d5_error_rate=double(errors)/double(1300);
-
 errrate(2,:)={"d5",num2str(d5_error_rate)};
 
 

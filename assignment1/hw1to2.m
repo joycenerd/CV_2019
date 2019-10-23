@@ -15,7 +15,8 @@ end
 
 selectpattern=fullfile(selectfolderpath,'*.bmp');
 selectimg=dir(selectpattern);
-numofselect=length(selectimg)
+numofselect=length(selectimg);
+
 if numofselect~=0
     for i=1:numofselect
         fname=fullfile(selectfolderpath,selectimg(i).name);
@@ -23,7 +24,8 @@ if numofselect~=0
     end
 end
 
-testdatapath="/home/dmplus/2019_juniorI/CV/assignment/assignment1/dataset/AR/AR_Test_image"
+testdatapath="/home/dmplus/2019_juniorI/CV/assignment/assignment1/dataset/AR/AR_Test_image";
+
 if ~isfolder(testdatapath)
     errorMessage=sprintf('Error: The following folder does not exist:\n%s',testdatapath);
     uiwait(warndlg(errorMessage));
@@ -74,6 +76,8 @@ for i=1:100
     vec=grayimg(:);
     imgmat(:,i)=vec;
 end
+
+imgmat=imgmat-origmean;
 
 
 % compress and decompress the image when d=1,5,9
