@@ -132,3 +132,40 @@ for (iter = 1:1000)
         break
     end
 end
+
+
+% Step5
+% Plot the data points and their estimated PDFs (probability density functions)
+
+% scatter plot of the two distributions
+figure(2);
+hold off;
+plot(X1(:, 1), X1(:, 2), 'bo');
+hold on;
+plot(X2(:, 1), X2(:, 2), 'ro');
+
+set(gcf,'color','white'); % white background
+
+plot(mu1(1), mu1(2), 'kx');
+plot(mu2(1), mu2(2), 'kx');
+
+% create a matrix girdX (x,y coordinates) as the input values over the grid (range from -6 to 6)
+gridSize = 100;
+u = linspace(-6, 6, gridSize);
+[A B] = meshgrid(u, u);
+gridX = [A(:), B(:)];    % shape of 1D
+
+% calculate the Gaussian response (probability density function) for every value in the grid
+z1 = gaussianND(gridX, mu(1, :), sigma{1});
+z2 = gaussianND(gridX, mu(2, :), sigma{2});
+
+% reshape back to 2D
+Z1 = reshape(z1, gridSize, gridSize);
+Z2 = reshape(z2, gridSize, gridSize);
+
+% Plot the contour lines to show the Gaussian response (PDFs)
+[C, h] = contour(u, u, Z1);
+[C, h] = contour(u, u, Z2);
+axis([-6 6 -6 6])
+
+title('Original Data and Estimated PDFs');
