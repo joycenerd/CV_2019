@@ -99,7 +99,7 @@ for (iter = 1:1000)
     pdf_w = bsxfun(@times, pdf, phi);
     
     % Divide the weighted probabilities by the sum of weighted probabilities for each cluster.
-    %   sum(pdf_w, 2) -- sum over the clusters. (new probability)
+    % sum(pdf_w, 2)-> sum over the clusters. (new probability)
     W = bsxfun(@rdivide, pdf_w, sum(pdf_w, 2));
 
     % M step (Maximization): given ownership probabilities, update blobs to
