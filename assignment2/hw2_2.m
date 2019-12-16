@@ -1,5 +1,5 @@
+% import functions from GMM_Examples
 import GMM_Examples.*;
-
 
 % image 1 and 1D
 % read image 1 -> Shiba 1
